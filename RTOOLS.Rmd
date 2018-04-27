@@ -1,0 +1,119 @@
+---
+title: "RTools for Antarctica and the Southern Ocean"
+author: "Hsun-Yi Hsieh"
+output:
+  html_document:
+    toc: true
+    toc_float: 
+      collapsed: true
+      smooth_sroll: true
+    number_sections: true
+---
+## Data retrival{.tabset}
+Species occurrence data can be found in various 
+
+[The Global Biodiversity Information Facility (GBIF)](https://www.gbif.org/) and [The Ocean Biogeographic Information System (OBIS)](http://www.iobis.org/) provide species occurrence data at the global scale. 
+
+### rgbif
+<a href = "https://ropensci.org/tutorials/rgbif_tutorial/">rgbif</a> helps users to retrieve data from the GBIF. 
+
+###robis
+<a href = "https://github.com/iobis/robis">robis</a> helps users to retrieve data from the OBIS.
+
+```
+install.packages("rgbif")
+library("rgbif")
+occ_get(key=c(101010, 240713150, 855998194), return='data')
+```
+
+## Data cleaning wrangling {.tabset}
+### tidyverse
+The <a href = "https://www.tidyverse.org/packages/"> **tidyverse**</a> is a collection of R packages designed for data science. The collection includes <a href = "http://dplyr.tidyverse.org/">**dplyr**</a> for data frame creation and manipulation, <a href = "http://readr.tidyverse.org/">**readr**</a> and <a href = "http://readxl.tidyverse.org/">**readxl**</a> for reading data from text or EXCEL files, <a href = "http://purrr.tidyverse.org/">**purrr**</a> for speeding up functional prorgramminga and <a href = "http://ggplot2.tidyverse.org/">**ggplot2**</a> for visualization. 
+
+Users can install all the packages in the tidyverse by running 
+
+``` 
+install.packages("tidyverse")
+```
+
+Alternatively, install one or more single package(s) by running, for instance,
+
+```
+install.packages("tidyr")
+install.packages("dplyr")
+```
+
+Or download the development versions from GitHub
+```
+devtools::install_github("tidyverse/tidyr")
+devtools::install_github("tidyverse/dplyr")
+```
+
+### rrefine
+OpenRefine is an open source data cleaning software. <a href = "http://openrefine.org/">rrefine</a> allows users to programmatically triger data transfer between R and 'OpenRefine'. 
+
+### obistools
+
+## Taxonomy Tools {.tabset}
+
+### taxasize
+
+### biotaxa
+
+## Visualization
+polar stereographic projection.
+
+## Examples 
+This tutorial provides an exmaple of downloading GBIF data, conducting data cleaning and...
+
+```
+install.packages(c("rgbif", "tidyverse", "sp", "raster"))
+library(rfbif)
+library(tidyverse)
+library(sp)
+library(mapr)
+library(raster)
+```
+Downloading occurrence data of *Euphausia superba* in the geometrical range 60-70$^\circ$S and 165-170$^\circ$E.
+
+```
+occ_krills <- occ_search(scientificName = "Euphausia superba", return = "data", limit = 20000, hasCoordinate = T, geometry = c(-120,-60,-180,-90))
+occ_krills <- data.frame(occ_krills)
+#LongLat = CRS("+proj=longlat +ellps=WGS84 +datum=WGS84")
+map_leaflet(occ_krills, "decimalLongitude", "decimalLatitude", size=1, color="blue")
+xy <- occ_krills[c("decimalLongitude","decimalLatitude")]
+#download an environmental layer
+env <- getData('worldclim', var='bio', res=10) 
+title(main = bquote(italic(.("Euphausia superba")) ~occurrences~on~Annual~mean~temperature~'(dCx10)'))
+points(xy, col='blue', pch=20)
+
+```
+
+```
+plot(env, 1, main=NULL, axes=FALSE)
+```
+the use of R package antanym
+```
+library(antanym)
+my_longitude <- c(-180, -120)
+my_latitude <- c(-90, -60)
+this_names <- an_filter(g, extent = c(my_longitude, my_latitude))
+```
+
+## ropensci
+In addition to the above mentioned R packages and tools, [ropensci](https://ropensci.org/) is an online forum open to all interested programmers and scientists for R package development. Users can find an amazing array of interesting tools and contribute to the developent of all R packages.
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
