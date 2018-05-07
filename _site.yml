@@ -1,5 +1,4 @@
 name: "code.biodiversity.aq"
-output_dir: "."
 navbar:
   title: "code.biodiversity.aq"
   left:

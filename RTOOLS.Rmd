@@ -1,5 +1,5 @@
 ---
-title: "RTools for Antarctica and the Southern Ocean"
+title: "RTools for Antarctica and the Southern Ocean Biodiversity"
 author: "Hsun-Yi Hsieh"
 output:
   html_document:
@@ -9,10 +9,11 @@ output:
       smooth_sroll: true
     number_sections: true
 ---
-## Data retrival{.tabset}
-Species occurrence data can be found in various 
+## Data retrieval{.tabset}
 
-[The Global Biodiversity Information Facility (GBIF)](https://www.gbif.org/) and [The Ocean Biogeographic Information System (OBIS)](http://www.iobis.org/) provide species occurrence data at the global scale. 
+[The Global Biodiversity Information Facility (GBIF)](https://www.gbif.org/), [The Ocean Biogeographic Information System (OBIS)](http://www.iobis.org/) and <a href = "http://biodiversity.aq">ANTABIF</a> all provide species occurrence data at the global scale. As the GBIF harbors occurrences of both terrestrial and marine species,the OBIS is the most comprehensive source of marine species occurrences and ANTABIF aims to establish as an authority of biodiversity data for Antarctica and the Southern Ocean.
+
+As the ANTABIF API is an ongoing project, this page presents occurrence retrievals of GBIF and OBIS data. The following sections will provide a basic workflow for data cleaning, wrangling, analysis and visualisation in R.
 
 ### rgbif
 <a href = "https://ropensci.org/tutorials/rgbif_tutorial/">rgbif</a> helps users to retrieve data from the GBIF. 
@@ -61,24 +62,94 @@ OpenRefine is an open source data cleaning software. <a href = "http://openrefin
 ### biotaxa
 
 ## Visualization
-polar stereographic projection.
+The [Github page of Australian Antarctic Data Center](https://github.com/AustralianAntarcticDataCentre/antanym-demo) hosts nice source code for polar stereographic projection.
+
+To run the piece of code, first install the leaflet package of the rstudio version.
+```
+devtools::install_github("rstudio/leaflet")
+library(leaflet)
+library(dplyr)
+```
+
+```
+library(antanym)
+library(leaflet)
+g <- an_read()
+
+## find single name per feature, preferring United Kingdom
+##  names where available, and only rows with valid locations
+temp <- g %>% an_preferred("United Kingdom")
+temp <- temp[!is.na(temp$longitude) & !is.na(temp$latitude),]
+
+## replace NAs with empty strings in narrative
+temp$narrative[is.na(temp$narrative)] <- ""
+
+## formatted popup HTML
+popup <- sprintf("<h1>%s</h1><p><strong>Country of origin:</strong> %s<br />
+  <strong>Longitude:</strong> %g<br /><strong>Latitude:</strong> %g<br />
+  <a href=\"https://data.aad.gov.au/aadc/gaz/scar/display_name.cfm?gaz_id=%d\">
+    Link to SCAR gazetteer</a></p>",temp$place_name,temp$country_name,
+  temp$longitude,temp$latitude,temp$gaz_id)
+
+m <- leaflet() %>%
+  addProviderTiles("Esri.WorldImagery") %>%
+  addMarkers(lng = temp$longitude, lat = temp$latitude, group = "placenames",
+    clusterOptions = markerClusterOptions(),popup = popup,
+    label = temp$place_name)
+
+startZoom <- 1
+
+crsAntartica <-  leafletCRS(
+  crsClass = 'L.Proj.CRS',
+  code = 'EPSG:3031',
+  proj4def = '+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs',
+  resolutions = c(8192, 4096, 2048, 1024, 512, 256),
+  origin = c(-4194304, 4194304),
+  bounds =  list( c(-4194304, -4194304), c(4194304, 4194304) )
+)
+
+mps <- leaflet(options = leafletOptions(crs = crsAntartica, minZoom = 0, worldCopyJump = FALSE)) %>%
+    setView(0, -90, startZoom) %>%
+    addCircleMarkers(lng = temp$longitude, lat = temp$latitude, group = "placenames",
+                     popup = popup, label = temp$place_name,
+                     fillOpacity = 0.5, radius = 8, stroke = FALSE, color = "#000",
+					 labelOptions = labelOptions(textOnly = FALSE)) %>%
+    addWMSTiles(baseUrl = "https://maps.environments.aq/mapcache/antarc/?",
+                layers = "antarc_ramp_bath_shade_mask",
+                options = WMSTileOptions(format = "image/png", transparent = TRUE),
+                attribution = "Background imagery courtesy <a href='http://www.environments.aq/'>environments.aq</a>") %>%
+    addGraticule()
+mps
+```
+
+
+
 
 ## Examples 
-This tutorial provides an exmaple of downloading GBIF data, conducting data cleaning and...
+This exmple demonstrates a simple workflow of applying the basic RTools for data retrieval, cleaning, analysis and visulisation. Users are encouraged to explore more themselves and apply appropriately.
 
 ```
 install.packages(c("rgbif", "tidyverse", "sp", "raster"))
-library(rfbif)
+library(rgbif)
 library(tidyverse)
 library(sp)
 library(mapr)
 library(raster)
 ```
-Downloading occurrence data of *Euphausia superba* in the geometrical range 60-70$^\circ$S and 165-170$^\circ$E.
+Downloading occurrence data of *Actinia*, a genus of sea anemones in the family Actiniidae. 
+
+in the geometrical range 60-70$^\circ$S and 165-170$^\circ$E.
 
 ```
-occ_krills <- occ_search(scientificName = "Euphausia superba", return = "data", limit = 20000, hasCoordinate = T, geometry = c(-120,-60,-180,-90))
-occ_krills <- data.frame(occ_krills)
+First, retrieve the occurrence data of krills within the given geometric range. In this example, we set up a limit of 5000 occurrences. This may take a while.
+occ_Actinia <- occ_search(scientificName = "Actinia", return = "data", limit = 5000, hasCoordinate = T)
+occ_Actinia <- data.frame(occ_Actinia)
+#have a view of the data columns
+colnames(occ_Actinia)
+
+#You can save the dataset in your favoriate directory.
+write.csv(occ_Actinia, ".../occ_Actinia.csv", row.names = FALSE)
+
 #LongLat = CRS("+proj=longlat +ellps=WGS84 +datum=WGS84")
 map_leaflet(occ_krills, "decimalLongitude", "decimalLatitude", size=1, color="blue")
 xy <- occ_krills[c("decimalLongitude","decimalLatitude")]
@@ -106,10 +177,7 @@ In addition to the above mentioned R packages and tools, [ropensci](https://rope
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
 
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
-
-```{r}
-plot(cars)
-```
+`
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
 
