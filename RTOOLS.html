@@ -72,6 +72,7 @@ h6 {
 }
 </style>
 
+<link href="data:text/css;charset=utf-8,%0Abody%7B%0Afont%2Dfamily%3A%20Helvetica%3B%0Afont%2Dsize%3A%2013pt%3B%0A%7D%0A%0Ah1%7B%0Afont%2Dsize%3A%2020pt%3B%0A%7D%0Ah2%7B%0Afont%2Dsize%3A%2022pt%3B%0A%7D%0Ah3%7B%0Afont%2Dsize%3A%2020pt%3B%0A%7D%0Ah4%7B%0Afont%2Dsize%3A%2018pt%3B%0A%7D%0A" rel="stylesheet" type="text/css" />
 
 </head>
 
@@ -298,24 +299,42 @@ div.tocify {
 </div>
 
 
-<div id="data-retrieval" class="section level2 tabset">
+<pre><code>install.packages(&quot;rmdformats&quot;)</code></pre>
+<div id="data-retrieval" class="section level2">
 <h2><span class="header-section-number">0.1</span> Data retrieval</h2>
-<p><a href="https://www.gbif.org/">The Global Biodiversity Information Facility (GBIF)</a>, <a href="http://www.iobis.org/">The Ocean Biogeographic Information System (OBIS)</a> and <a href="http://biodiversity.aq">ANTABIF</a> all provide species occurrence data at the global scale. As the GBIF harbors occurrences of both terrestrial and marine species,the OBIS is the most comprehensive source of marine species occurrences and ANTABIF aims to establish as an authority of biodiversity data for Antarctica and the Southern Ocean.</p>
-<p>As the ANTABIF API is an ongoing project, this page presents occurrence retrievals of GBIF and OBIS data. The following sections will provide a basic workflow for data cleaning, wrangling, analysis and visualisation in R.</p>
-<div id="rgbif" class="section level3">
-<h3><span class="header-section-number">0.1.1</span> rgbif</h3>
+<p><a href="https://www.gbif.org/">The Global Biodiversity Information Facility (GBIF)</a>, <a href="http://www.iobis.org/">the Ocean Biogeographic Information System (OBIS)</a> and <a href="http://biodiversity.aq">ANTABIF</a> all provide species occurrence data. As the GBIF harbors occurrences of both terrestrial and marine species at the globa scale, the OBIS is the most comprehensive source of marine species occurrences and ANTABIF aims to establish as an authority of biodiversity data for Antarctica and the Southern Ocean.</p>
+<p>The construction of the ANTABIF API is an ongoing project. This page presents occurrence retrievals, analyses and visualizations of GBIF and OBIS data. The following sections will provide a basic workflow for data cleaning, wrangling, analysis and visualisation in R.</p>
+<div id="gbif" class="section level3">
+<h3><span class="header-section-number">0.1.1</span> GBIF</h3>
 <p><a href="https://ropensci.org/tutorials/rgbif_tutorial/">rgbif</a> helps users to retrieve data from the GBIF.</p>
+<pre><code>occ_search() is a function for searching GBIF occurrence data.
+
+#search by scientificName.
+occ_search(scientificName = 'Ursus americanus', limit = 0, return = &quot;meta&quot;)
+
+#search by dataset key.
+occ_search(datasetKey='7b5d6a48-f762-11e1-a439-00145eb45e9a', return='data', limit=20)
+
+# Search on latitidue and longitude
+occ_search(search=&quot;kingfisher&quot;, decimalLatitude=50, decimalLongitude=-10)</code></pre>
+<p>Alternatively, users can download data directly from GBIF. For instance, <a href="%22https://www.gbif.org/dataset/82d9ff5c-f762-11e1-a439-00145eb45e9a%22">Antarctic Plant Database</a> harbors more than 50,000 occurrences of over 40,000 plant specimens from Antarctica, the sub-Antarctic islands and surrounding continents.</p>
+<p>Users can also download and import the data directly in one step as follows.</p>
+<pre><code>dd_gbif &lt;- occ_download_get(key = &quot;0000066-140928181241064&quot;, overwrite = TRUE) %&gt;% 
+    occ_download_import(dd_gbif_download, na.strings = c(&quot;&quot;, NA))</code></pre>
 </div>
-<div id="robis" class="section level3">
-<h3><span class="header-section-number">0.1.2</span> robis</h3>
+<div id="obis" class="section level3">
+<h3><span class="header-section-number">0.1.2</span> OBIS</h3>
 <p><a href="https://github.com/iobis/robis">robis</a> helps users to retrieve data from the OBIS.</p>
 <pre><code>install.packages(&quot;rgbif&quot;)
 library(&quot;rgbif&quot;)
-occ_get(key=c(101010, 240713150, 855998194), return='data')</code></pre>
+occ_get(key=c(101010, 240713150, 855998194), return='data')
+occ_get(key=c(855998194, 620594291, 766420684),
+   fields=c('scientificName', 'decimalLatitude', 'basisOfRecord'),
+   verbatim=TRUE)</code></pre>
 </div>
 </div>
-<div id="data-cleaning-wrangling" class="section level2 tabset">
-<h2><span class="header-section-number">0.2</span> Data cleaning wrangling</h2>
+<div id="data-browsing-cleaning-wrangling" class="section level2">
+<h2><span class="header-section-number">0.2</span> Data browsing, cleaning wrangling</h2>
 <div id="tidyverse" class="section level3">
 <h3><span class="header-section-number">0.2.1</span> tidyverse</h3>
 <p>The <a href="https://www.tidyverse.org/packages/"> <strong>tidyverse</strong></a> is a collection of R packages designed for data science. The collection includes <a href="http://dplyr.tidyverse.org/"><strong>dplyr</strong></a> for data frame creation and manipulation, <a href="http://readr.tidyverse.org/"><strong>readr</strong></a> and <a href="http://readxl.tidyverse.org/"><strong>readxl</strong></a> for reading data from text or EXCEL files, <a href="http://purrr.tidyverse.org/"><strong>purrr</strong></a> for speeding up functional prorgramminga and <a href="http://ggplot2.tidyverse.org/"><strong>ggplot2</strong></a> for visualization.</p>
@@ -410,8 +429,48 @@ library(tidyverse)
 library(sp)
 library(mapr)
 library(raster)</code></pre>
-<p>Downloading occurrence data of <em>Actinia</em>, a genus of sea anemones in the family Actiniidae.</p>
-<p>in the geometrical range 60-70<span class="math inline">\(^\circ\)</span>S and 165-170<span class="math inline">\(^\circ\)</span>E.</p>
+<div id="occ_search" class="section level3">
+<h3><span class="header-section-number">0.5.1</span> occ_search()</h3>
+<p>Here we use <a href="%22https://www.gbif.org/dataset/82d9ff5c-f762-11e1-a439-00145eb45e9a%22">Antarctic Plant Database</a> as an example. After downloading the entire dataset from the GBIF, we can start exploring it for a bit. We aim to understand how each species in this dataset distributes in the interested region (Antarctica and sub-Antarctica) and across the globe.</p>
+<pre><code>setwd(&quot;&quot;) #set working directory to where the dataset is saved
+occurrence &lt;- read.table(&quot;occurrence.txt&quot;, header = T, sep = &quot;\t&quot;, fill = TRUE, quote = &quot;&quot;)
+#get an overview of the dataset
+head(occurrence)
+#find the dimension of the dataset
+dim(occurrence) #Here it shows there are 52,181 occurrences
+#find how many unique taxon keys there are in the dataset. 
+length(unique(occurrence$taxonKey)) #there are 2,653 unique taxon keys</code></pre>
+<p>We will retrieve all of the occurrence data of the first 10 taxon keys by using the GBIF occ_search() and compute their regional distributions in Antarctica (60-90<span class="math inline">\(^\circ\)</span>S), subantarctica (45-60<span class="math inline">\(^\circ\)</span>S), south temperate (30-45<span class="math inline">\(^\circ\)</span>S), tropics (30<span class="math inline">\(^\circ\)</span>N-30<span class="math inline">\(^\circ\)</span>S), north temperate (30-60<span class="math inline">\(^\circ\)</span>N) and the arctic (60-90<span class="math inline">\(^\circ\)</span>N).</p>
+<p>First, we write a function to retrieve all of the occurrence data of the 10 taxon keys via using occ_search() and compute their regional distributions</p>
+<pre><code>whereGet &lt;- function(taxonKey) {
+  dd &lt;- occ_search(taxonKey, return = &quot;data&quot;)
+  lats &lt;- na.omit(dd$decimalLatitude) #discard occurrences without latitudes
+  Antarctic &lt;- subset(lats, lats &gt;= -90 &amp; lats &lt;= -60)
+  Subantarctic &lt;- subset(lats, lats &gt; -60 &amp; lats &lt;= -45)
+  South_temperate &lt;- subset(lats, lats &gt; -45 &amp; lats &lt;= -30)
+  Tropical &lt;- subset(lats, lats &gt; -30 &amp; lats &lt; 30)
+  North_temperate &lt;- subset(lats, lats &gt;= 30 &amp; lats &lt; 60)
+  Arctic &lt;- subset(lats, lats &gt;= 60 &amp; lats &lt;= 90)
+
+  if(length(lats) != 0) {
+    prop_antarctic &lt;- round(length(Antarctic)/length(lats), digits = 3)
+    prop_subantarctic &lt;- round(length(Subantarctic)/length(lats), digits = 3)
+    prop_south_temperate &lt;- round(length(South_temperate)/length(lats), digits = 3)
+    prop_tropical &lt;- round(length(Tropical)/length(lats), digits = 3)
+    prop_north_temperate &lt;- round(length(North_temperate)/length(lats), digits = 3)
+    prop_arctic &lt;- round(length(Arctic)/length(lats), digits = 3)
+    return(c(prop_antarctic = prop_antarctic, prop_subantarctic = prop_subantarctic, prop_south_temperate = prop_south_temperate, prop_tropical = prop_tropical, prop_north_temperate = prop_north_temperate, prop_arctic = prop_arctic))
+
+  } else {
+    return(c(prop_antarctic = NA, prop_subantarctic = NA, prop_south_temperate = NA, prop_tropical = NA, prop_north_temperate = NA, prop_arctic = NA))
+  }
+
+}
+</code></pre>
+<p>collect the first taxon keys in the dataset</p>
+<pre><code>taxonKeys &lt;- occurrence$taxonKey[1:10] 
+props2 &lt;- do.call(rbind, props)
+head(props2)</code></pre>
 <pre><code>First, retrieve the occurrence data of krills within the given geometric range. In this example, we set up a limit of 5000 occurrences. This may take a while.
 occ_Actinia &lt;- occ_search(scientificName = &quot;Actinia&quot;, return = &quot;data&quot;, limit = 5000, hasCoordinate = T)
 occ_Actinia &lt;- data.frame(occ_Actinia)
@@ -435,6 +494,7 @@ points(xy, col='blue', pch=20)
 my_longitude &lt;- c(-180, -120)
 my_latitude &lt;- c(-90, -60)
 this_names &lt;- an_filter(g, extent = c(my_longitude, my_latitude))</code></pre>
+</div>
 </div>
 <div id="ropensci" class="section level2">
 <h2><span class="header-section-number">0.6</span> ropensci</h2>
